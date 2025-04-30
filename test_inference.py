@@ -11,14 +11,14 @@ from mmocr.apis import MMOCRInferencer
 #  - sau combinatie: det='dbnetpp', rec='svtr-small'
 # se creeaza un obiect infer care foloseste MMOCRInferencer
 infer = MMOCRInferencer(
-    det='dbnetpp',       
+    det='textsnake',       
     rec='svtr-small',    
     device='cpu'         # Folosesc CPU
 )
 
 # Apelează inferenta pe o imagine din demo
 result = infer(
-    'demo/chip3.jpg',
+    'demo/chip3.png',
     save_vis=True,       # Salvează o imagine cu predicțiile desenate
     return_vis=True      # Intoarce imaginea prelucrata in "result"
 )

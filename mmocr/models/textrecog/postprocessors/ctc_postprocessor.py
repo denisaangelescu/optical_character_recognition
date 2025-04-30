@@ -1,7 +1,7 @@
 # clasa ce implementeaza postprocesarea pentru decodarea CTC folosind Beam Search
 
 
-
+"""
 import math # functii matematice
 from typing import Sequence, Tuple # tipuri de date pentru indicarea formatului returnat
 
@@ -18,7 +18,7 @@ import numpy as np # operatiuni matematice rapide
 # TODO support beam search
 @MODELS.register_module() # inregistreaza clasa 
 class CTCPostProcessor(BaseTextRecogPostprocessor): # extinde BaseTextRecogPostprocessor
-    """PostProcessor for CTC."""
+    #PostProcessor for CTC.
 
     def __init__(self, beam_width=10, **kwargs): # constructor
         # keyword arguments este un mecanism care permite metodei sa primeasca orice parametru suplimentar 
@@ -29,9 +29,9 @@ class CTCPostProcessor(BaseTextRecogPostprocessor): # extinde BaseTextRecogPostp
 
     # gaseste secvente mai bune decat greedy decoding
     def beam_search_decoder(self, probs, beam_width):
-        """
-        Beam Search Decoder pentru CTC.
-        """
+        
+        #Beam Search Decoder pentru CTC.
+        
         T, C = probs.shape  # T = lung. secv. de iesire; C = nr. total de caractere posibile
         beam = [([], 0)]  # (secventa goala, scor log-probabilitate)
 
@@ -60,37 +60,25 @@ class CTCPostProcessor(BaseTextRecogPostprocessor): # extinde BaseTextRecogPostp
         # data_sample -> contine informatii despre imaginea procesata
         # index -> secventa de caractere prezisa
         # score -> scorurile fiecarui caracter
-        """Convert the output probabilities of a single image to index and
-        score.
+        # Convert the output probabilities of a single image to index and
+        # score.
 
-        Args:
-            probs (torch.Tensor): Character probabilities with shape
-                :math:`(T, C)`.
-            data_sample (TextRecogDataSample): Datasample of an image.
+        # Args:
+        #     probs (torch.Tensor): Character probabilities with shape
+        #         :math:`(T, C)`.
+        #     data_sample (TextRecogDataSample): Datasample of an image.
 
-        Returns:
-            tuple(list[int], list[float]): index and score.
-        """
+        # Returns:
+        #     tuple(list[int], list[float]): index and score.
+        
         feat_len = probs.size(0) # extrage lungimea secventei de timp (returneaza T)
-        # max_value, max_idx = torch.max(probs, -1)
+        
         # valid_ratio indica cat din secventa generata este valida
         valid_ratio = data_sample.get('valid_ratio', 1) # se ia valoarea respectiva sau daca nu exista, 1
         # feat_len * valid_ratio -> cat din feat_len este valid
         # math.ceil() -> rotunjeste in sus la un nr intreg
         # decode_len nu depaseste totusi feat_len
         decode_len = min(feat_len, math.ceil(feat_len * valid_ratio)) # lungimea reala a secventei de iesire
-        #index = []
-        #score = []
-        # prev_idx = self.dictionary.padding_idx
-        # for t in range(decode_len): # la fiecare pas de timp alegem caracterul cu probabilitate maxima
-        #     tmp_value = max_idx[t].item()
-        #     if tmp_value not in (prev_idx, *self.ignore_indexes): # ignoram dublurile
-        #         index.append(tmp_value)
-        #         score.append(max_value[t].item())
-        #     prev_idx = tmp_value
-
-
-
 
         # Beam Search Decoding
         # converteste din tensor in array
@@ -106,3 +94,59 @@ class CTCPostProcessor(BaseTextRecogPostprocessor): # extinde BaseTextRecogPostp
         # accelereaza procesarea)
         return super().__call__(outputs, data_samples) # clasa de baza are deja implementata logica de decodare
         # eu doar o extind
+
+        """
+
+
+
+import math
+from typing import Sequence, Tuple
+
+import torch
+
+from mmocr.registry import MODELS
+from mmocr.structures import TextRecogDataSample
+from .base import BaseTextRecogPostprocessor
+
+
+# TODO support beam search
+@MODELS.register_module()
+class CTCPostProcessor(BaseTextRecogPostprocessor):
+    """PostProcessor for CTC."""
+
+    def get_single_prediction(self, probs: torch.Tensor,
+                              data_sample: TextRecogDataSample
+                              ) -> Tuple[Sequence[int], Sequence[float]]:
+        """Convert the output probabilities of a single image to index and
+        score.
+
+        Args:
+            probs (torch.Tensor): Character probabilities with shape
+                :math:`(T, C)`.
+            data_sample (TextRecogDataSample): Datasample of an image.
+
+        Returns:
+            tuple(list[int], list[float]): index and score.
+        """
+        feat_len = probs.size(0)
+        max_value, max_idx = torch.max(probs, -1)
+        valid_ratio = data_sample.get('valid_ratio', 1)
+        decode_len = min(feat_len, math.ceil(feat_len * valid_ratio))
+        index = []
+        score = []
+
+        prev_idx = self.dictionary.padding_idx
+        for t in range(decode_len):
+            tmp_value = max_idx[t].item()
+            if tmp_value not in (prev_idx, *self.ignore_indexes):
+                index.append(tmp_value)
+                score.append(max_value[t].item())
+            prev_idx = tmp_value
+        return index, score
+
+    def __call__(
+        self, outputs: torch.Tensor,
+        data_samples: Sequence[TextRecogDataSample]
+    ) -> Sequence[TextRecogDataSample]:
+        outputs = outputs.cpu().detach()
+        return super().__call__(outputs, data_samples)

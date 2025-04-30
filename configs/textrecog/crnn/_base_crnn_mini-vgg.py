@@ -25,7 +25,7 @@ model = dict(
         type='CRNNDecoder', # decodor tip CRNN
         in_channels=512, # modelul CNN produce 512 canale caracteristici, transmise la RNN
         rnn_flag=True, # activeaza partea RNN
-        max_seq_len=20, # modelul poate recunoaste pana la 20 de caractere dintr o imagine
+        # max_seq_len=20, # modelul poate recunoaste pana la 20 de caractere dintr o imagine
         # module_loss=dict(type='CTCModuleLoss', letter_case='unchanged'),
         # CTC (Connectionist Temporal Classification)
         # CTC permite antrenarea modelului fara a avea nevoie de alinierea exacta intre imagine si text
@@ -34,7 +34,8 @@ model = dict(
         module_loss=dict(type='CTCModuleLoss', letter_case='upper'), 
         # type -> foloseste un postprocesor pentru decodarea secventei de caractere
         # beam_width compara mai multe variante de secvente si alege pe cea mai buna
-        postprocessor=dict(type='CTCPostProcessor', beam_width=10), # Beam search activat
+        postprocessor=dict(type='CTCPostProcessor')
+        #, beam_width=10), # Beam search activat
         # dictionar definit mai sus
         dictionary=dictionary),
     # normalizeaza imaginile, standardizeaza intensitatea pixelilor (0 - 255) 
