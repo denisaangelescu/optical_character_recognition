@@ -1,0 +1,10 @@
+crop 
+
+filtru_median_size_footprint -> am ales size = 5
+filtru_median_mode -> am ales mode = constant cval = 0
+filtru_median -> varianta finala + histograma
+
+otsu
+
+op_morfologic
+
